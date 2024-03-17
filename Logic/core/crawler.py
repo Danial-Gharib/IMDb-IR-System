@@ -156,10 +156,11 @@ class IMDbCrawler:
         crawled_counter = 0
 
         with ThreadPoolExecutor(max_workers=20) as executor:
-            while WHILE_LOOP_CONSTRAINTS:
-                URL = NEW_URL
+            while self.not_crawled and crawled_counter < self.crawling_threshold:
+                URL = self.not_crawled.popleft()
                 futures.append(executor.submit(self.crawl_page_info, URL))
-                if THERE_IS_NOTHING_TO_CRAWL:
+                crawled_counter += 1
+                if not self.not_crawled:
                     wait(futures)
                     futures = []
 
@@ -175,6 +176,9 @@ class IMDbCrawler:
         """
         print("new iteration")
         # TODO
+        response = self.crawl(URL)
+        movie = self.get_imdb_instance()
+        self.extract_movie_info(response, movie, URL)
         pass
 
     def extract_movie_info(self, res, movie, URL):
@@ -191,23 +195,26 @@ class IMDbCrawler:
             The URL of the site
         """
         # TODO
-        movie['title'] = None
-        movie['first_page_summary'] = None
-        movie['release_year'] = None
-        movie['mpaa'] = None
-        movie['budget'] = None
-        movie['gross_worldwide'] = None
-        movie['directors'] = None
-        movie['writers'] = None
-        movie['stars'] = None
-        movie['related_links'] = None
-        movie['genres'] = None
-        movie['languages'] = None
-        movie['countries_of_origin'] = None
-        movie['rating'] = None
-        movie['summaries'] = None
-        movie['synopsis'] = None
-        movie['reviews'] = None
+        soup = BeautifulSoup(res.text, 'html.parser')
+        movie['title'] = self.get_title(soup)
+        movie['first_page_summary'] = self.get_first_page_summary(soup)
+        movie['release_year'] = self.get_release_year(soup)
+        movie['mpaa'] = self.get_mpaa(soup)
+        movie['budget'] = self.get_budget(soup)
+        movie['gross_worldwide'] = self.get_gross_worldwide(soup)
+        movie['directors'] = self.get_director(soup)
+        movie['writers'] = self.get_writers(soup)
+        movie['stars'] = self.get_stars(soup)
+        movie['related_links'] = self.get_related_links(soup)
+        movie['genres'] = self.get_genres(soup)
+        movie['languages'] = self.get_languages(soup)
+        movie['countries_of_origin'] = self.get_countries_of_origin(soup)
+        movie['rating'] = self.get_rating(soup)
+        movie['summaries'] = self.get_summary(soup)
+        movie['synopsis'] = self.get_synopsis(soup)
+        movie['reviews'] = self.get_reviews_with_scores(soup)
+
+        
 
     def get_summary_link(url):
         """
@@ -227,6 +234,9 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            summary_url = url + 'plotsummary'
+            get(summary_url)
+            return summary_url
             pass
         except:
             print("failed to get summary link")
@@ -240,6 +250,9 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            review_url = url + "reviews"
+            get(review_url)
+            return review_url
             pass
         except:
             print("failed to get review link")
@@ -260,6 +273,8 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            title = soup.select('#__next > main > div > section.ipc-page-background.ipc-page-background--base.sc-304f99f6-0.fSJiHR > section > div:nth-child(5) > section > section > div.sc-491663c0-3.bdjVSf > div.sc-67fa2588-0.cFndlt > h1 > span')
+            return title[0].text
             pass
         except:
             print("failed to get title")
@@ -279,6 +294,8 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            summary = soup.find('span', role='presentation', class_='sc-466bb6c-0 hlbAws')
+            return summary.text
             pass
         except:
             print("failed to get first page summary")

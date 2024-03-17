@@ -11,7 +11,7 @@ class IMDbCrawler:
     put your own user agent in the headers
     """
     headers = {
-        'User-Agent': None
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     }
     top_250_URL = 'https://www.imdb.com/chart/top/'
 
@@ -25,12 +25,12 @@ class IMDbCrawler:
             The number of pages to crawl
         """
         # TODO
-        self.crawling_threshold = None
-        self.not_crawled = None
-        self.crawled = None
-        self.added_ids = None
-        self.add_list_lock = None
-        self.add_queue_lock = None
+        self.crawling_threshold = crawling_threshold
+        self.not_crawled = deque()
+        self.crawled = []
+        self.added_ids = set()
+        self.add_list_lock = Lock()
+        self.add_queue_lock = Lock()
 
     def get_id_from_URL(self, URL):
         """
@@ -47,13 +47,22 @@ class IMDbCrawler:
             The id of the site
         """
         # TODO
-        return URL.split('/')[4]
+        URL_arr = URL.split('/')
+        id = None
+        for idx, part in enumerate(URL_arr):
+                if part == 'title':
+                        id = URL_arr[idx + 1]
+                        break
+        return id
+        # return URL.split('/')[4]
 
     def write_to_file_as_json(self):
         """
         Save the crawled files into json
         """
         # TODO
+        with open('IMDB_crawled.json', 'w') as f:
+            json.dump(self.crawled, f)
         pass
 
     def read_from_file_as_json(self):
@@ -62,12 +71,12 @@ class IMDbCrawler:
         """
         # TODO
         with open('IMDB_crawled.json', 'r') as f:
-            self.crawled = None
+            self.crawled = json.load(f)
 
-        with open('IMDB_not_crawled.json', 'w') as f:
-            self.not_crawled = None
+        with open('IMDB_not_crawled.json', 'w') as f: #?
+            self.not_crawled = deque(json.load(f))
 
-        self.added_ids = None
+        self.added_ids = set([movie['id'] for movie in self.crawled])
 
     def crawl(self, URL):
         """
@@ -83,14 +92,24 @@ class IMDbCrawler:
             The response of the get request
         """
         # TODO
-        return None
+        return get(URL, headers=self.headers)
 
     def extract_top_250(self):
         """
         Extract the top 250 movies from the top 250 page and use them as seed for the crawler to start crawling.
         """
         # TODO update self.not_crawled and self.added_ids
+        response = self.crawl(self.top_250_URL)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        movie_links = soup.select('#__next > main > div > div.ipc-page-content-container.ipc-page-content-container--center > section > div > div.ipc-page-grid.ipc-page-grid--bias-left > div > ul > li:nth-child(n) > div.ipc-metadata-list-summary-item__c > div > div > div.ipc-title.ipc-title--base.ipc-title--title.ipc-title-link-no-icon.ipc-title--on-textPrimary.sc-b0691f29-9.klOwFB.cli-title > a')
+        # print(movie_links[-1].text)
+        for link in movie_links:
+           movie_id = self.get_id_from_URL(link['href'])
+           if movie_id:
+                  self.not_crawled.append('https://www.imdb.com' + link['href'])
+                  self.added_ids.add(movie_id)
 
+        
 
     def get_imdb_instance(self):
         return {

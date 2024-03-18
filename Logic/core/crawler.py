@@ -257,6 +257,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get summary link")
+            return ''
 
     def get_review_link(self, url):
         """
@@ -273,6 +274,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get review link")
+            return ''
 
     def get_title(soup):
         """
@@ -295,6 +297,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get title")
+            return 'not-present'
 
     def get_first_page_summary(soup):
         """
@@ -316,6 +319,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get first page summary")
+            return 'not-present'
 
     def get_director(soup):
         """
@@ -343,6 +347,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get director")
+            return ['not-present']
 
     def get_stars(soup):
         """
@@ -372,6 +377,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get stars")
+            return ['not-present']
 
     def get_writers(soup):
         """
@@ -401,6 +407,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get writers")
+            return ['not-present']
 
     def get_related_links(soup):
         """
@@ -440,6 +447,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get related links")
+            return ['not-present']
 
     def get_summary(soup):
         """
@@ -464,6 +472,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get summary")
+            return ['not-present']
 
     def get_synopsis(soup):
         """
@@ -488,6 +497,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get synopsis")
+            return ['not-present']
 
     def get_reviews_with_scores(soup):
         """
@@ -518,6 +528,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get reviews")
+            return [['not-present']]
 
     def get_genres(soup):
         """
@@ -542,6 +553,7 @@ class IMDbCrawler:
             pass
         except:
             print("Failed to get generes")
+            return ['not-present']
 
     def get_rating(soup):
         """
@@ -564,6 +576,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get rating")
+            return 'not-present'
 
     def get_mpaa(soup):
         """
@@ -585,6 +598,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get mpaa")
+            return 'not-present'
 
     def get_release_year(soup):
         """
@@ -607,6 +621,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get release year")
+            return 'not-present'
 
     def get_languages(soup):
         """
@@ -630,7 +645,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get languages")
-            return None
+            return ['not-present']
 
     def get_countries_of_origin(soup):
         """
@@ -653,6 +668,7 @@ class IMDbCrawler:
             pass
         except:
             print("failed to get countries of origin")
+            return ['not-present']
 
     def get_budget(soup):
         """
@@ -674,10 +690,15 @@ class IMDbCrawler:
                 spans = budget_li.find_all('span')
                 if len(spans) > 1:
                      parts = spans[1].get_text(strip=True).split('(')
-                     return parts[0].strip()
+                     if parts[0]:
+                        return parts[0].strip()
+                     else:
+                         return 'not-resent'
+            return 'not-present'
             pass
         except:
             print("failed to get budget")
+            return 'not-present'
 
     def get_gross_worldwide(soup):
         """
@@ -696,15 +717,20 @@ class IMDbCrawler:
             # TODO
             gross_li = soup.find('li', {'data-testid' : 'title-boxoffice-cumulativeworldwidegross'})
             if gross_li:
-                 gross_amount = gross_li.find_all('span')[1].get_text(strip=True)
-                 return gross_amount
+                gross_amount = gross_li.find_all('span')[1].get_text(strip=True)
+                if gross_amount is not None:
+                    return gross_amount
+                else:
+                    return 'not-present'
+            return 'not-present'
             pass
         except:
             print("failed to get gross worldwide")
+            return 'not-present'
 
 
 def main():
-    imdb_crawler = IMDbCrawler(crawling_threshold=1200)
+    imdb_crawler = IMDbCrawler(crawling_threshold=1500)
     # imdb_crawler.read_from_file_as_json()
     imdb_crawler.start_crawling()
     imdb_crawler.write_to_file_as_json()

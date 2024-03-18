@@ -4,7 +4,7 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor, wait
 from threading import Lock
 import json
-
+import re
 
 class IMDbCrawler:
     """
@@ -106,7 +106,8 @@ class IMDbCrawler:
         for link in movie_links:
            movie_id = self.get_id_from_URL(link['href'])
            if movie_id:
-                  self.not_crawled.append('https://www.imdb.com' + link['href'])
+                  splited = link['href'].split('/')
+                  self.not_crawled.append('https://www.imdb.com/' + splited[1] + '/' + splited[2] + '/')
                   self.added_ids.add(movie_id)
 
         
@@ -154,12 +155,13 @@ class IMDbCrawler:
         self.extract_top_250()
         futures = []
         crawled_counter = 0
-
+        lock = Lock()
         with ThreadPoolExecutor(max_workers=20) as executor:
             while self.not_crawled and crawled_counter < self.crawling_threshold:
                 URL = self.not_crawled.popleft()
                 futures.append(executor.submit(self.crawl_page_info, URL))
-                crawled_counter += 1
+                with lock:
+                    crawled_counter += 1
                 if not self.not_crawled:
                     wait(futures)
                     futures = []
@@ -179,6 +181,20 @@ class IMDbCrawler:
         response = self.crawl(URL)
         movie = self.get_imdb_instance()
         self.extract_movie_info(response, movie, URL)
+        movie['id'] = self.get_id_from_URL(URL) ### ? ? ? 
+
+        with self.add_list_lock:
+            self.crawled.append(movie)
+            print("Crawled movie:", movie['title'])
+        for related_link in movie['related_links']:
+            movie_id = self.get_id_from_URL(related_link)
+            if movie_id in self.added_ids:
+                continue
+            with self.add_list_lock:
+                self.not_crawled.append(related_link)
+            with self.add_queue_lock:
+                self.added_ids.add(movie_id)
+        return
         pass
 
     def extract_movie_info(self, res, movie, URL):
@@ -198,27 +214,26 @@ class IMDbCrawler:
         soup = BeautifulSoup(res.text, 'html.parser')
         soup_summary = BeautifulSoup(self.crawl(self.get_summary_link(URL)).text, 'html.parser')
         soup_reviews = BeautifulSoup(self.crawl(self.get_review_link(URL)).text, 'html.parser')
-        movie['title'] = self.get_title(soup)
-        movie['first_page_summary'] = self.get_first_page_summary(soup)
-        movie['release_year'] = self.get_release_year(soup)
-        movie['mpaa'] = self.get_mpaa(soup)
-        movie['budget'] = self.get_budget(soup)
-        movie['gross_worldwide'] = self.get_gross_worldwide(soup)
-        movie['directors'] = self.get_director(soup)
-        movie['writers'] = self.get_writers(soup)
-        movie['stars'] = self.get_stars(soup)
-        movie['related_links'] = self.get_related_links(soup)
-        movie['genres'] = self.get_genres(soup)
-        movie['languages'] = self.get_languages(soup)
-        movie['countries_of_origin'] = self.get_countries_of_origin(soup)
-        movie['rating'] = self.get_rating(soup)
-        movie['summaries'] = self.get_summary(soup_summary)
-        movie['synopsis'] = self.get_synopsis(soup_summary)
-        movie['reviews'] = self.get_reviews_with_scores(soup_reviews)
-
+        movie['title'] = IMDbCrawler.get_title(soup)
+        movie['first_page_summary'] = IMDbCrawler.get_first_page_summary(soup)
+        movie['release_year'] = IMDbCrawler.get_release_year(soup)
+        movie['mpaa'] = IMDbCrawler.get_mpaa(soup)
+        movie['budget'] = IMDbCrawler.get_budget(soup)
+        movie['gross_worldwide'] = IMDbCrawler.get_gross_worldwide(soup)
+        movie['directors'] = IMDbCrawler.get_director(soup)
+        movie['writers'] = IMDbCrawler.get_writers(soup)
+        movie['stars'] = IMDbCrawler.get_stars(soup)
+        movie['related_links'] = IMDbCrawler.get_related_links(soup)
+        movie['genres'] = IMDbCrawler.get_genres(soup)
+        movie['languages'] = IMDbCrawler.get_languages(soup)
+        movie['countries_of_origin'] = IMDbCrawler.get_countries_of_origin(soup)
+        movie['rating'] = IMDbCrawler.get_rating(soup)
+        movie['summaries'] = IMDbCrawler.get_summary(soup_summary)
+        movie['synopsis'] = IMDbCrawler.get_synopsis(soup_summary)
+        movie['reviews'] = IMDbCrawler.get_reviews_with_scores(soup_reviews)
         
 
-    def get_summary_link(url):
+    def get_summary_link(self, url):
         """
         Get the link to the summary page of the movie
         Example:
@@ -243,7 +258,7 @@ class IMDbCrawler:
         except:
             print("failed to get summary link")
 
-    def get_review_link(url):
+    def get_review_link(self, url):
         """
         Get the link to the review page of the movie
         Example:
@@ -417,8 +432,10 @@ class IMDbCrawler:
                 for link in all_links.find_all('a'):
                     href = link.get('href')
                     if get_id_from_URL(href) is not None and get_id_from_URL(href) not in movie_ids:
-                        movie_ids.append(get_id_from_URL(href))
-                        related_links.append('https://www.imdb.com' + href)
+                        movie_ids.append(get_id_from_URL(href))  
+                        splited = href.split('/')
+                        final_link = 'https://www.imdb.com' + '/' +splited[1] + '/' + splited[2] + '/'
+                        related_links.append(final_link)
             return related_links
             pass
         except:
@@ -563,7 +580,8 @@ class IMDbCrawler:
         """
         try:
             # TODO
-            
+            mpaa = soup.select('#__next > main > div > section.ipc-page-background.ipc-page-background--base.sc-304f99f6-0.fSJiHR > section > div:nth-child(5) > section > section > div.sc-491663c0-3.bdjVSf > div.sc-67fa2588-0.cFndlt > ul > li:nth-child(2) > a')
+            return mpaa[0].text
             pass
         except:
             print("failed to get mpaa")
@@ -583,6 +601,9 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            releaseinfo_links = soup.find_all('a', href=lambda href: href and 'releaseinfo' in href)
+            releaseinfo_texts = [link.get_text(strip=True) for link in releaseinfo_links]
+            return releaseinfo_texts[0]
             pass
         except:
             print("failed to get release year")
@@ -602,6 +623,10 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            language_li = soup.find('li', {'data-testid': 'title-details-languages'})
+            languages = language_li.text.strip()
+            languages = re.findall('[A-Z][^A-Z]*', languages)
+            return languages[1:]
             pass
         except:
             print("failed to get languages")
@@ -622,6 +647,9 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            origin_tags = soup.find_all('a', href=lambda href: href and 'country_of_origin' in href)
+            origins = [tag.get_text(strip=True) for tag in origin_tags]
+            return origins
             pass
         except:
             print("failed to get countries of origin")
@@ -641,6 +669,12 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            budget_li = soup.find('li', {'data-testid': 'title-boxoffice-budget'})
+            if budget_li:
+                spans = budget_li.find_all('span')
+                if len(spans) > 1:
+                     parts = spans[1].get_text(strip=True).split('(')
+                     return parts[0].strip()
             pass
         except:
             print("failed to get budget")
@@ -660,17 +694,24 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            gross_li = soup.find('li', {'data-testid' : 'title-boxoffice-cumulativeworldwidegross'})
+            if gross_li:
+                 gross_amount = gross_li.find_all('span')[1].get_text(strip=True)
+                 return gross_amount
             pass
         except:
             print("failed to get gross worldwide")
 
 
 def main():
-    imdb_crawler = IMDbCrawler(crawling_threshold=1000)
+    imdb_crawler = IMDbCrawler(crawling_threshold=1200)
     # imdb_crawler.read_from_file_as_json()
     imdb_crawler.start_crawling()
     imdb_crawler.write_to_file_as_json()
-
-
+    
+    ids = [movie['id'] for movie in imdb_crawler.crawled]
+    unique_ids = set(ids)
+    num_unique_ids = len(unique_ids)
+    print(num_unique_ids)
 if __name__ == '__main__':
     main()

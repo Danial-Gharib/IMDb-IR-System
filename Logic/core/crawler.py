@@ -196,6 +196,8 @@ class IMDbCrawler:
         """
         # TODO
         soup = BeautifulSoup(res.text, 'html.parser')
+        soup_summary = BeautifulSoup(self.crawl(self.get_summary_link(URL)).text, 'html.parser')
+        soup_reviews = BeautifulSoup(self.crawl(self.get_review_link(URL)).text, 'html.parser')
         movie['title'] = self.get_title(soup)
         movie['first_page_summary'] = self.get_first_page_summary(soup)
         movie['release_year'] = self.get_release_year(soup)
@@ -210,9 +212,9 @@ class IMDbCrawler:
         movie['languages'] = self.get_languages(soup)
         movie['countries_of_origin'] = self.get_countries_of_origin(soup)
         movie['rating'] = self.get_rating(soup)
-        movie['summaries'] = self.get_summary(soup)
-        movie['synopsis'] = self.get_synopsis(soup)
-        movie['reviews'] = self.get_reviews_with_scores(soup)
+        movie['summaries'] = self.get_summary(soup_summary)
+        movie['synopsis'] = self.get_synopsis(soup_summary)
+        movie['reviews'] = self.get_reviews_with_scores(soup_reviews)
 
         
 
@@ -315,6 +317,14 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            all_lists = soup.find_all('li')
+            directors_set = set()
+            for li in all_lists:
+                text = li.text.strip()
+                if text.startswith('Director') or text.startswith('Directors'):
+                    director_names = [a.text.strip() for a in li.find_all('a')]
+                    directors_set.update(director_names)
+            return list(directors_set)
             pass
         except:
             print("failed to get director")
@@ -334,6 +344,16 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            all_lists = soup.find_all('li')
+            stars_set = set()
+            for li in all_lists:
+                text = li.text.strip()
+                if text.startswith('Stars'):
+                    stars_names = [a.text.strip() for a in li.find_all('a')]
+                    stars_set.update(stars_names)
+            stars_set.discard('')
+            stars_set.discard('Stars')
+            return (list(stars_set))
             pass
         except:
             print("failed to get stars")
@@ -353,6 +373,16 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            all_lists = soup.find_all('li')
+            writers_set = set()
+            for li in all_lists:
+                text = li.text.strip()
+                if text.startswith('Writers') or text.startswith('Writer'):
+                    writers_names = [a.text.strip() for a in li.find_all('a')]
+                    writers_set.update(writers_names)
+            writers_set.discard('')
+            writers_set.discard('Writers')
+            return (list(writers_set))
             pass
         except:
             print("failed to get writers")
@@ -370,8 +400,26 @@ class IMDbCrawler:
         List[str]
             The related links of the movie
         """
+        def get_id_from_URL(url):
+            URL_arr = url.split('/')
+            id = None
+            for idx, part in enumerate(URL_arr):
+                if part == 'title':
+                        id = URL_arr[idx + 1]
+                        break
+            return id
         try:
             # TODO
+            all_links = soup.find(attrs={'data-testid' : 'MoreLikeThis'})
+            related_links = []
+            movie_ids = []
+            if all_links:
+                for link in all_links.find_all('a'):
+                    href = link.get('href')
+                    if get_id_from_URL(href) is not None and get_id_from_URL(href) not in movie_ids:
+                        movie_ids.append(get_id_from_URL(href))
+                        related_links.append('https://www.imdb.com' + href)
+            return related_links
             pass
         except:
             print("failed to get related links")
@@ -391,6 +439,11 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            summaries = []
+            li_elements = soup.select('div[data-testid="sub-section-summaries"] li')
+            for li in li_elements:
+                summaries.append(li.text)
+            return summaries 
             pass
         except:
             print("failed to get summary")
@@ -409,7 +462,12 @@ class IMDbCrawler:
             The synopsis of the movie
         """
         try:
+
             # TODO
+            li_elements = soup.select('div[data-testid="sub-section-synopsis"] li')
+            # print(li_elements)
+            synopsis = li_elements[0].get_text(separator='<br/><br/>').strip()
+            return synopsis.split("<br/><br/>")
             pass
         except:
             print("failed to get synopsis")
@@ -430,6 +488,16 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            review_blocks = soup.find_all('div', class_="review-container")
+            reviews_with_scores = []
+            for review_block in review_blocks:
+                try:
+                    score = review_block.find('span', class_='rating-other-user-rating').get_text(strip=True)
+                    review = review_block.find('div', class_='text show-more__control').get_text(strip=True)
+                except:
+                    continue
+                reviews_with_scores.append([score, review])
+            return reviews_with_scores
             pass
         except:
             print("failed to get reviews")
@@ -449,6 +517,11 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            genres = []
+            genre_labels = soup.find('div', {'data-testid': 'genres'})
+            for a in genre_labels.find_all('a'):
+                 genres.append(a.text.strip())
+            return genres
             pass
         except:
             print("Failed to get generes")
@@ -468,6 +541,9 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            rating = None
+            rating_label = soup.find('div', {'data-testid': 'hero-rating-bar__aggregate-rating__score'})
+            return rating_label.text.strip()
             pass
         except:
             print("failed to get rating")
@@ -487,6 +563,7 @@ class IMDbCrawler:
         """
         try:
             # TODO
+            
             pass
         except:
             print("failed to get mpaa")
@@ -589,7 +666,7 @@ class IMDbCrawler:
 
 
 def main():
-    imdb_crawler = IMDbCrawler(crawling_threshold=600)
+    imdb_crawler = IMDbCrawler(crawling_threshold=1000)
     # imdb_crawler.read_from_file_as_json()
     imdb_crawler.start_crawling()
     imdb_crawler.write_to_file_as_json()

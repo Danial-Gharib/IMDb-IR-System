@@ -153,7 +153,7 @@ class Preprocessor:
 def main():
     print("Hi!")
     pp = Preprocessor(
-        ["Hi, My name's Ayoub that is an Iranian name which each girl loves to be beside one",
+        ["Hi, My name's Ayoub that is an Iranian name which each guy loves to be beside one",
           "One day, One morning shining in the ocean",
           "We were both young when I first saw you!",
           "I can be reached at www.Ayoubekalantary.ir b.t.w!"],

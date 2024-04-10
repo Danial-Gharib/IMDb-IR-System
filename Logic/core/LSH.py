@@ -110,7 +110,7 @@ class MinHashLSH:
         """
         # TODO
         num_hashes, num_docs = signature.shape
-        bands = int(num_hashes / rows_per_band)
+        # bands = int(num_hashes / rows_per_band)
         buckets = {}
         for band_idx in range(bands):
             band_s = band_idx * rows_per_band

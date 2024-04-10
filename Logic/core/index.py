@@ -305,3 +305,9 @@ class Index:
             return False
 
 # TODO: Run the class with needed parameters, then run check methods and finally report the results of check methods
+
+def main():
+    print("Hi")
+
+if __name__ == '__main__':
+    main()

@@ -3,7 +3,7 @@ from indexes_enum import Indexes,Index_types
 from index_reader import Index_reader
 
 class DocumentLengthsIndex:
-    def __init__(self,path='index/'):
+    def __init__(self,path='indexes/'):
         """
         Initializes the DocumentLengthsIndex class.
 
@@ -41,7 +41,13 @@ class DocumentLengthsIndex:
         """
 
         # TODO:
-    
+        document_lengths = {}
+        for document_id, document_data in self.documents_index.items():
+            if where in document_data:
+                document_lengths[document_id] = len(document_data[where])
+            else:
+                document_lengths[document_id] = 0
+        return document_lengths
     def store_document_lengths_index(self, path , index_name):
         """
         Stores the document lengths index to a file.

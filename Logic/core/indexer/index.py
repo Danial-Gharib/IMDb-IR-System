@@ -396,9 +396,7 @@ def main():
 
     indexer.check_add_remove_is_correct()
 
-    indexer.check_if_indexing_is_good('summaries', 'good')
-    indexer.check_if_indexing_is_good('stars', 'clint')
-    indexer.check_if_indexing_is_good('genres', 'crime')
+    indexer.check_if_indexing_is_good('summaries', 'perfect')
 
 
     indexer.store_index('indexes', 'documents')

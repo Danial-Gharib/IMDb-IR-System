@@ -8,7 +8,7 @@ from nltk.stem import WordNetLemmatizer
 
 class Preprocessor:
 
-    def __init__(self, documents: list, stopwords_path: str, does_stem=True, does_lemmatize=True):
+    def __init__(self, documents: list, stopwords_path='stopwords.txt', does_stem=True, does_lemmatize=True):
         """
         Initialize the class.
 

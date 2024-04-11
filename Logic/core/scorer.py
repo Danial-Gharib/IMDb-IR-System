@@ -228,6 +228,8 @@ class Scorer:
         score = 0.0
         dl = document_lengths.get(document_id, 0)
         for term in query:
+            if term not in self.index:
+                continue
             df = len(self.index[term])
             okapi_idf = np.log((self.N - df + 0.5) / (df + 0.5) + 1)
             tf = self.index[term].get(document_id, 0)

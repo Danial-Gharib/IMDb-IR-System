@@ -66,7 +66,9 @@ class Scorer:
         idf = self.idf.get(term, None)
         if idf is None:
             # TODO
-            pass
+            df = len(self.index.get(term, {}))
+            idf = np.log(self.N / df)
+            self.idf[term] = idf
         return idf
     
     def get_query_tfs(self, query):
@@ -83,7 +85,10 @@ class Scorer:
         dict
             A dictionary of the term frequencies of the terms in the query.
         """
-        
+        query_tfs = {}
+        for term in query:
+            query_tfs[term] = query_tfs.get(term, 0) + 1
+        return query_tfs
         #TODO
 
 
@@ -103,8 +108,14 @@ class Scorer:
         dict
             A dictionary of the document IDs and their scores.
         """
-
+        scores = {}
         # TODO
+        query_tfs = self.get_query_tfs(query)
+        document_method, query_method = method.split('.')
+        for doc_id in self.get_list_of_documents(query):
+            scores[doc_id] = self.get_vector_space_model_score(
+                query, query_tfs, doc_id, document_method, query_method)
+        return scores
         pass
 
     def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
@@ -129,9 +140,40 @@ class Scorer:
         float
             The Vector Space Model score of the document for the query.
         """
-
-        #TODO
-        pass
+        doc_tf_method, doc_idf_method, doc_norm_method = document_method[0], document_method[1], document_method[2]
+        query_tf_method, query_idf_method, query_norm_method = query_method[0], query_method[1], query_method[2]
+        q_v = list()
+        d_v = list()
+        query_terms = list(set(query))
+        for term in query_terms:
+            if term in self.index:
+                q_v.append(self.calc_weight(query_tfs[term], self.get_idf(term), query_tf_method, query_idf_method))
+                d_v.append(self.calc_weight(self.index[term].get(document_id, 0), self.get_idf(term)
+                                            , doc_tf_method, doc_idf_method))
+        if doc_norm_method == 'c':
+            d_v = self.normalization(d_v)
+        if query_norm_method == 'c':
+            q_v = self.normalization(q_v)
+        return np.dot(np.array(q_v), np.array(d_v))
+    
+    def calc_weight(self, tf, idf, tf_method, idf_method):
+        res = 0
+        if tf_method == 'n':
+            res = tf
+        elif tf_method == 'l':
+            if tf != 0:
+                res = np.log(tf) + 1
+            else:
+                res = 0
+        if idf_method == 't':
+            res *= idf
+        return res
+    def normalization(self, vector):
+        vector = np.array(vector)
+        norm = np.linalg.norm(vector)
+        return list(vector / norm)
+    
+        
 
     def compute_socres_with_okapi_bm25(self, query, average_document_field_length, document_lengths):
         """
@@ -152,7 +194,10 @@ class Scorer:
         dict
             A dictionary of the document IDs and their scores.
         """
-
+        scores = {}
+        for doc_id in self.get_list_of_documents(query):
+            scores[doc_id] = self.get_okapi_bm25_score(query, doc_id, average_document_field_length, document_lengths)
+        return scores
         # TODO
         pass
 
@@ -177,6 +222,18 @@ class Scorer:
         float
             The Okapi BM25 score of the document for the query.
         """
+        k1 = 1.2
+        b = 0.75
 
+        score = 0.0
+        dl = document_lengths.get(document_id, 0)
+        for term in query:
+            df = len(self.index[term])
+            okapi_idf = np.log((self.N - df + 0.5) / (df + 0.5) + 1)
+            tf = self.index[term].get(document_id, 0)
+            okapi_tf = (tf * (k1 + 1)) / (tf + k1*(1 - b + b*dl/average_document_field_length))
+            score += okapi_idf * okapi_tf
+
+        return score
         # TODO
         pass

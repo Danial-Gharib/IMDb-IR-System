@@ -1,0 +1,32 @@
+{
+    "first_tier": {
+        "action": 1,
+        "adventure": 1,
+        "drama": 1,
+        "crime": 1,
+        "mystery": 1,
+        "western": 1,
+        "biography": 1,
+        "history": 1,
+        "fantasy": 1,
+        "romance": 1,
+        "scifi": 1,
+        "family": 1,
+        "thriller": 1,
+        "comedy": 1,
+        "music": 1,
+        "animation": 1,
+        "war": 1,
+        "horror": 1,
+        "notpresent": 1,
+        "filmnoir": 1,
+        "musical": 1,
+        "sport": 1,
+        "documentary": 1,
+        "short": 1,
+        "realitytv": 1,
+        "news": 1
+    },
+    "second_tier": {},
+    "third_tier": {}
+}

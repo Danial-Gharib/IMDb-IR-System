@@ -1,9 +1,9 @@
 import json
 import numpy as np
-from .preprocess import Preprocessor
-from .scorer import Scorer
-from .indexes_enum import Indexes, Index_types
-from .index_reader import Index_reader
+from preprocess import Preprocessor
+from scorer import Scorer
+from indexer.indexes_enum import Indexes, Index_types
+from indexer.index_reader import Index_reader
 
 
 class SearchEngine:
@@ -12,7 +12,7 @@ class SearchEngine:
         Initializes the search engine.
 
         """
-        path = '/index'
+        path = 'indexes/'
         self.document_indexes = {
             Indexes.STARS: Index_reader(path, Indexes.STARS),
             Indexes.GENRES: Index_reader(path, Indexes.GENRES),
@@ -55,7 +55,7 @@ class SearchEngine:
         """
 
         preprocessor = Preprocessor([query])
-        query = preprocessor.preprocess()[0].split()
+        query = preprocessor.preprocess()[0]
 
         scores = {}
         if safe_ranking:
@@ -87,6 +87,12 @@ class SearchEngine:
             The final scores of the documents.
         """
         # TODO
+        for index_type, weight in weights.items():
+            for doc_id, score in scores[index_type].items():
+                if doc_id not in final_scores:
+                    final_scores[doc_id] = 0
+                final_scores[doc_id] += score * weight
+        return
         pass
 
     def find_scores_with_unsafe_ranking(self, query, method, weights, max_results, scores):
@@ -109,7 +115,27 @@ class SearchEngine:
         for field in weights:
             for tier in ["first_tier", "second_tier", "third_tier"]:
                 #TODO
-                pass
+                scorer = Scorer(
+                    self.tiered_index[field].index[tier],
+                    self.metadata_index.index['document_count']
+                )
+                if method == 'OkapiBM25':
+                    score = scorer.compute_socres_with_okapi_bm25(
+                        query,
+                        self.metadata_index.index['averge_document_length'][field.value],
+                        self.document_lengths_index[field].index
+                    )
+                else:
+                    score = scorer.compute_scores_with_vector_space_model(
+                        query, method
+                    )
+                if field in scores:
+                    scores[field] = self.merge_scores(scores[field], score)
+                else:
+                    scores[field] = score
+                if len(scores[field]) >= max_results:
+                    break
+                
 
     def find_scores_with_safe_ranking(self, query, method, weights, scores):
         """
@@ -129,7 +155,20 @@ class SearchEngine:
 
         for field in weights:
             #TODO
-            pass
+            index_reader = self.document_indexes[field]
+            index = index_reader.index
+            scorer = Scorer(index, self.metadata_index.index['document_count'])
+            if method == 'OkapiBM25':
+                scores[field] = scorer.compute_socres_with_okapi_bm25(query, 
+                                self.metadata_index.index['averge_document_length'][field.value],
+                                self.document_lengths_index[field].index
+                                )
+            else:
+                scores[field] = scorer.compute_scores_with_vector_space_model(
+                    query, method
+                    )
+        return
+        
 
     def merge_scores(self, scores1, scores2):
         """
@@ -147,19 +186,27 @@ class SearchEngine:
         dict
             The merged dictionary of scores.
         """
+        merged_scores = {}
+        for doc_id in scores1:
+            merged_scores[doc_id] = scores1[doc_id] + scores2.get(doc_id, 0)
+        for doc_id in scores2:
+            if doc_id not in merged_scores:
+                merged_scores[doc_id] = scores2[doc_id]
+
+        return merged_scores
 
         #TODO
 
 
 if __name__ == '__main__':
     search_engine = SearchEngine()
-    query = "spider man in wonderland"
+    query = "spiderman in wonderland"
     method = "lnc.ltc"
     weights = {
         Indexes.STARS: 1,
         Indexes.GENRES: 1,
         Indexes.SUMMARIES: 1
     }
-    result = search_engine.search(query, method, weights)
+    result = search_engine.search(query, method, weights, safe_ranking=True)
 
     print(result)

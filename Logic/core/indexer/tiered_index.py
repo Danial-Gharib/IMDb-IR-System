@@ -63,14 +63,21 @@ class Tiered_index:
         third_tier = {}
         #TODO
 
-        for key, value in current_index.items():
-            for sub_val in value.values():
-                if sub_val >= first_tier_threshold:
-                    first_tier[key] = sub_val
-                elif sub_val >= second_tier_threshold:
-                    second_tier[key] = sub_val
+        for word, dic in current_index.items():
+            for doc_id, tf in dic.items():
+                if tf >= first_tier_threshold:
+                    if word not in first_tier:
+                        first_tier[word] = {}
+                    first_tier[word][doc_id] = tf
+                elif tf >= second_tier_threshold:
+                    if word not in second_tier:
+                        second_tier[word] = {}
+                    second_tier[word][doc_id] = tf
                 else:
-                    third_tier[key] = sub_val
+                    if word not in third_tier:
+                        third_tier[word] = {}
+                    third_tier[word][doc_id] = tf
+                    
         return {
             "first_tier": first_tier,
             "second_tier": second_tier,

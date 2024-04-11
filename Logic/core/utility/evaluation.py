@@ -1,4 +1,4 @@
-
+import numpy as np
 from typing import List
 
 class Evaluation:
@@ -25,7 +25,14 @@ class Evaluation:
         precision = 0.0
 
         # TODO: Calculate precision here
-        
+        if not actual or not predicted:
+            return precision
+        num_predicted = len(predicted)
+        true_pos = 0
+        for pred_list in predicted:
+            if pred_list in actual:
+                true_pos += 1
+        precision = true_pos / num_predicted if num_predicted != 0 else 0
         return precision
     
     def calculate_recall(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -47,7 +54,14 @@ class Evaluation:
         recall = 0.0
 
         # TODO: Calculate recall here
-
+        if not actual:
+            return recall
+        num_actual = len(actual)
+        true_pos = 0
+        for pred_list in predicted:
+            if pred_list in actual:
+                true_pos += 1
+        recall = true_pos / num_actual if num_actual != 0 else 0
         return recall
     
     def calculate_F1(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -69,7 +83,10 @@ class Evaluation:
         f1 = 0.0
 
         # TODO: Calculate F1 here
-
+        precision = self.calculate_precision(actual, predicted)
+        recall = self.calculate_recall(actual, predicted)
+        if precision + recall != 0:
+            f1 = 2 * (precision * recall) / (precision + recall)
         return f1
     
     def calculate_AP(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -91,7 +108,17 @@ class Evaluation:
         AP = 0.0
 
         # TODO: Calculate AP here
-
+        if not actual or not predicted:
+            return AP
+        num_actual = len(actual)
+        num_predicted = len(predicted)
+        true_pos = 0
+        precision_sum = 0
+        for i, pred_list in enumerate(predicted):
+            if pred_list in actual:
+                true_pos += 1
+                precision_sum += true_pos / (i + 1)
+        AP = precision_sum / num_actual if num_actual != 0 else 0
         return AP
     
     def calculate_MAP(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -113,7 +140,9 @@ class Evaluation:
         MAP = 0.0
 
         # TODO: Calculate MAP here
-
+        num_queries = len(actual)
+        total_AP = sum(self.calculate_AP(actual[i], predicted[i]) for i in range(num_queries))
+        MAP = total_AP / num_queries if num_queries != 0 else 0
         return MAP
     
     def cacluate_DCG(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -135,7 +164,13 @@ class Evaluation:
         DCG = 0.0
 
         # TODO: Calculate DCG here
-
+        if not actual or not predicted:
+            return DCG
+        num_actual = len(actual[0])
+        num_predicted = len(predicted[0])
+        for i in range(num_predicted):
+            if i < num_actual:
+                DCG += 1 / np.log2(i + 2)
         return DCG
     
     def cacluate_NDCG(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -157,7 +192,9 @@ class Evaluation:
         NDCG = 0.0
 
         # TODO: Calculate NDCG here
-
+        DCG = self.cacluate_DCG(actual, predicted)
+        ideal_DCG = self.cacluate_DCG(actual, predicted)
+        NDCG = DCG / ideal_DCG if ideal_DCG != 0 else 0
         return NDCG
     
     def cacluate_RR(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
@@ -232,7 +269,15 @@ class Evaluation:
             
         """
         print(f"name = {self.name}")
-
+        print(f"Precision: {precision}")
+        print(f"Recall: {recall}")
+        print(f"F1 Score: {f1}")
+        print(f"Average Precision: {ap}")
+        print(f"Mean Average Precision: {map}")
+        print(f"Discounted Cumulative Gain: {dcg}")
+        print(f"Normalized Discounted Cumulative Gain: {ndcg}")
+        print(f"Reciprocal Rank: {rr}")
+        print(f"Mean Reciprocal Rank: {mrr}")
         #TODO: Print the evaluation metrics
       
 

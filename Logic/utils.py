@@ -2,10 +2,16 @@ from typing import Dict, List
 from core.search import SearchEngine
 from core.spell_correction import SpellCorrection
 from core.snippet import Snippet
-from core.indexes_enum import Indexes, Index_types
+from core.indexer.indexes_enum import Indexes, Index_types
 import json
 
 movies_dataset = None  # TODO
+try :
+    with open('IMDB_crawled.json', 'r') as f:
+        movies_dataset = json.load(f)
+except:
+    print("Could not load movies_dataset!")
+
 search_engine = SearchEngine()
 
 
@@ -25,6 +31,7 @@ def correct_text(text: str, all_documents: List[str]) -> str:
         The corrected form of the given text
     """
     # TODO: You can add any preprocessing steps here, if needed!
+    text = text.lower()
     spell_correction_obj = SpellCorrection(all_documents)
     text = spell_correction_obj.spell_check(text)
     return text
@@ -61,7 +68,12 @@ def search(
     list
     Retrieved documents with snippet
     """
-    weights = ...  # TODO
+    # weights = ...  # TODO
+    weights = {
+        Indexes.STARS: weights[0],
+        Indexes.GENRES: weights[1],
+        Indexes.SUMMARIES: weights[2]
+    }
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )

@@ -1,10 +1,10 @@
-from .indexes_enum import Indexes, Index_types
-from .index_reader import Index_reader
+from indexes_enum import Indexes, Index_types
+from index_reader import Index_reader
 import json
 
 
 class Tiered_index:
-    def __init__(self, path="index/"):
+    def __init__(self, path="indexes/"):
         """
         Initializes the Tiered_index.
 
@@ -62,6 +62,15 @@ class Tiered_index:
         second_tier = {}
         third_tier = {}
         #TODO
+
+        for key, value in current_index.items():
+            for sub_val in value.values():
+                if sub_val >= first_tier_threshold:
+                    first_tier[key] = sub_val
+                elif sub_val >= second_tier_threshold:
+                    second_tier[key] = sub_val
+                else:
+                    third_tier[key] = sub_val
         return {
             "first_tier": first_tier,
             "second_tier": second_tier,
@@ -79,5 +88,5 @@ class Tiered_index:
 
 if __name__ == "__main__":
     tiered = Tiered_index(
-        path="index/"
+        path="indexes/"
     )

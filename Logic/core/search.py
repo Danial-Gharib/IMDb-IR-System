@@ -1,9 +1,9 @@
 import json
 import numpy as np
-from .preprocess import Preprocessor
-from .scorer import Scorer
-from .indexer.indexes_enum import Indexes, Index_types
-from .indexer.index_reader import Index_reader
+from preprocess import Preprocessor
+from scorer import Scorer
+from indexer.indexes_enum import Indexes, Index_types
+from indexer.index_reader import Index_reader
 
 
 class SearchEngine:
@@ -12,7 +12,7 @@ class SearchEngine:
         Initializes the search engine.
 
         """
-        path = 'indexes/'
+        path = 'indexes_standard/'
         self.document_indexes = {
             Indexes.STARS: Index_reader(path, Indexes.STARS),
             Indexes.GENRES: Index_reader(path, Indexes.GENRES),
@@ -203,8 +203,8 @@ if __name__ == '__main__':
     query = "spiderman in wonderland"
     method = "lnc.ltc"
     weights = {
-        Indexes.STARS: 1,
-        Indexes.GENRES: 1,
+        Indexes.STARS: 0,
+        Indexes.GENRES: 0,
         Indexes.SUMMARIES: 1
     }
     result = search_engine.search(query, method, weights, safe_ranking=True)

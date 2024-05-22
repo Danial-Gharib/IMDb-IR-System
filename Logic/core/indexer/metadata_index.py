@@ -77,4 +77,4 @@ class Metadata_index:
 
     
 if __name__ == "__main__":
-    meta_index = Metadata_index()
+    meta_index = Metadata_index(path='indexes_standard/')

@@ -65,5 +65,5 @@ class DocumentLengthsIndex:
     
 
 if __name__ == '__main__':
-    document_lengths_index = DocumentLengthsIndex()
+    document_lengths_index = DocumentLengthsIndex(path='indexes_standard/')
     print('Document lengths index stored successfully.')

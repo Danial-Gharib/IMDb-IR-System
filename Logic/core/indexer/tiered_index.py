@@ -95,5 +95,5 @@ class Tiered_index:
 
 if __name__ == "__main__":
     tiered = Tiered_index(
-        path="indexes/"
+        path="indexes_standard/"
     )

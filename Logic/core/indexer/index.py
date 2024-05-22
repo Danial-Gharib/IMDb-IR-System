@@ -358,7 +358,7 @@ def main():
     parent_dir = os.path.dirname(curr_dir)
     grandparent_dir = os.path.dirname(parent_dir)
     grandgrand_dir = os.path.dirname(grandparent_dir)
-    with open (os.path.join(grandgrand_dir, 'IMDB_crawled.json'), 'r') as f:
+    with open (os.path.join(grandgrand_dir, 'IMDB_crawled_standard.json'), 'r') as f:
         imdb_data = json.load(f)
     ###############
     ids = []
@@ -366,7 +366,7 @@ def main():
     stars = []
     genres = []
     for movie in imdb_data:
-        if movie['summaries'] != 'not-present' and movie['stars'] != 'not-present' and movie['genres'] != 'not-present':
+        if movie['summaries'] is not None and movie['stars'] is not None and movie['genres'] is not None:
             ids.append(movie['id'])
             summareis.append(' '.join(movie['summaries']))
             stars.append(' '.join(movie['stars']))
@@ -399,10 +399,10 @@ def main():
     indexer.check_if_indexing_is_good('summaries', 'perfect')
 
 
-    indexer.store_index('indexes', 'documents')
-    indexer.store_index('indexes', 'stars')
-    indexer.store_index('indexes', 'summaries')
-    indexer.store_index('indexes', 'genres')
+    indexer.store_index('indexes_standard', 'documents')
+    indexer.store_index('indexes_standard', 'stars')
+    indexer.store_index('indexes_standard', 'summaries')
+    indexer.store_index('indexes_standard', 'genres')
     ### check if index loaded correctly for different index types 
 
     print(indexer.check_if_index_loaded_correctly('documents', indexer.index['documents']))

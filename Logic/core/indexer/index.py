@@ -2,14 +2,15 @@ import time
 import os
 import json
 import copy
-from indexes_enum import Indexes
+from .indexes_enum import Indexes
 ### importing preprocessor
-import sys
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
-from preprocess import Preprocessor
+# import sys
+# current_dir = os.path.dirname(os.path.realpath(__file__))
+# parent_dir = os.path.dirname(current_dir)
+# sys.path.append(parent_dir)
 ####
+from utility import Preprocessor
+
 class Index:
     def __init__(self, preprocessed_documents: list):
         """

@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 import random
 import json
-from preprocess import Preprocessor
+from utility.preprocess import Preprocessor
 class MinHashLSH:
     def __init__(self, documents, num_hashes):
         """

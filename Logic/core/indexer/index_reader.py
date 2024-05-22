@@ -38,5 +38,3 @@ class Index_reader:
         with open(absolute_path, 'r') as file:
             return json.load(file)
         
-    
-        

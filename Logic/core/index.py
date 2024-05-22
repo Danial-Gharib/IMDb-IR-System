@@ -3,7 +3,7 @@ import os
 import json
 from enum import Enum
 import copy
-
+from utility import preprocess
 
 class Indexes(Enum):
     DOCUMENTS = 'documents'

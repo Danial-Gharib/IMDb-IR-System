@@ -1,11 +1,7 @@
 import json
 import numpy as np
-from preprocess import Preprocessor
-from scorer import Scorer
-from indexer.indexes_enum import Indexes, Index_types
-from indexer.index_reader import Index_reader
-from .utility import Preprocessor, Scorer
-from .indexer import Indexes, Index_types, Index_reader
+from utility import Preprocessor, Scorer
+from indexer import Indexes, Index_types, Index_reader
 
 
 class SearchEngine:
@@ -263,7 +259,7 @@ if __name__ == "__main__":
     search_engine = SearchEngine()
     query = "spiderman in wonderland"
     method = "lnc.ltc"
-    weights = {Indexes.STARS: 1, Indexes.GENRES: 1, Indexes.SUMMARIES: 1}
+    weights = {Indexes.STARS: 0, Indexes.GENRES: 0, Indexes.SUMMARIES: 1}
     result = search_engine.search(query, method, weights)
 
     print(result)

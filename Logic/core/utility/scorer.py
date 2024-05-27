@@ -274,8 +274,13 @@ class Scorer:
         float
             A dictionary of the document IDs and their scores.
         """
-
+        scores = {}
+        for doc_id in self.get_list_of_documents(query):
+            scores[doc_id] = self.compute_score_with_unigram_model(
+                query, doc_id, smoothing_method, document_lengths, alpha, lamda
+            )
         # TODO
+        return scores
         pass
 
     def compute_score_with_unigram_model(
@@ -306,6 +311,31 @@ class Scorer:
         float
             The Unigram score of the document for the query.
         """
+        doc_lenghts = document_lengths.get(document_id, 0)
+        total_terms_in_collection = sum(document_lengths.values())
+        score = 0.0
 
+        for term in query:
+            term_freq = self.index.get(term, {}).get(document_id, 0)
+            # print(term_freq)
+            collection_term_freq = sum(self.index.get(term, {}).values())
+            # print(collection_term_freq)
+            # print(term)
+            # print("_________________________")
+            probability = 0.0
+            if smoothing_method == 'naive':
+                probability = term_freq / doc_lenghts if doc_lenghts > 0 else 0
+            elif smoothing_method == 'bayes':
+                collection_prob = collection_term_freq / total_terms_in_collection
+                probability = (term_freq + alpha * collection_prob) / (doc_lenghts + alpha)
+            elif smoothing_method == 'mixture':
+                doc_prob = term_freq / doc_lenghts if doc_lenghts > 0 else 0
+                collection_prob = collection_term_freq / total_terms_in_collection
+                probability = lamda * doc_prob + (1 - lamda) * collection_prob
+            else:
+                raise ValueError("Unsopported smoothing method!")
+            if probability > 0:
+                score += np.log(probability)
+        return score
         # TODO
         pass

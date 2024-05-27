@@ -1,5 +1,7 @@
 IMDB_crawled_standard.json
 
+tmp.py
+
 # git ignore file for python projects
 # Byte-compiled / optimized / DLL files
 __pycache__/

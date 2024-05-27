@@ -80,7 +80,6 @@ class SearchEngine:
         """
         preprocessor = Preprocessor([query])
         query = preprocessor.preprocess()[0]
-
         scores = {}
         if method == "unigram":
             self.find_scores_with_unigram_model(
@@ -94,7 +93,9 @@ class SearchEngine:
             )
 
         final_scores = {}
-
+        # re2 = sorted(scores[Indexes.SUMMARIES].items(), key=lambda x: x[1], reverse=True)
+        # print(re2[0:9])
+        # print("__________________")
         self.aggregate_scores(weights, scores, final_scores)
 
         result = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
@@ -118,6 +119,8 @@ class SearchEngine:
         """
         # TODO
         for index_type, weight in weights.items():
+            if weight == 0:
+                continue
             for doc_id, score in scores[index_type].items():
                 if doc_id not in final_scores:
                     final_scores[doc_id] = 0
@@ -225,6 +228,17 @@ class SearchEngine:
             probability and the collection probability. Defaults to 0.5.
         """
         # TODO
+        for field in weights:
+            if weights[field] == 0:
+                continue
+            index_reader = self.document_indexes[field]
+            index = index_reader.index
+            document_lenghts = self.document_lengths_index[field].index
+            scorer = Scorer(index, self.metadata_index.index['document_count'])
+            scores[field] = scorer.compute_scores_with_unigram_model(
+                query, smoothing_method, document_lenghts, alpha, lamda
+            )
+        return
         pass
 
     def merge_scores(self, scores1, scores2):
@@ -258,8 +272,8 @@ class SearchEngine:
 if __name__ == "__main__":
     search_engine = SearchEngine()
     query = "spiderman in wonderland"
-    method = "lnc.ltc"
-    weights = {Indexes.STARS: 0, Indexes.GENRES: 0, Indexes.SUMMARIES: 1}
-    result = search_engine.search(query, method, weights)
+    method = "unigram"
+    weights = {Indexes.STARS: 0.0, Indexes.GENRES: 0.0, Indexes.SUMMARIES: 1}
+    result = search_engine.search(query, method, weights, smoothing_method='bayes')
 
     print(result)

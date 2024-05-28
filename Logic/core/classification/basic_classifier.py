@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 
-from ..word_embedding.fasttext_model import FastText
+from word_embedding.fasttext_model import FastText
 
 
 class BasicClassifier:

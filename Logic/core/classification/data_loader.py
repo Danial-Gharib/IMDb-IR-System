@@ -4,7 +4,7 @@ import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-from ..word_embedding.fasttext_model import FastText
+from word_embedding.fasttext_model import FastText
 
 
 class ReviewLoader:

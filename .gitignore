@@ -1,6 +1,7 @@
 IMDB_crawled_standard.json
 
 tmp.py
+fastText/
 
 # git ignore file for python projects
 # Byte-compiled / optimized / DLL files

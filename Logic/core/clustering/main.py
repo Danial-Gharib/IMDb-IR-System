@@ -3,8 +3,8 @@ import os
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
-from ..word_embedding.fasttext_data_loader import FastTextDataLoader
-from ..word_embedding.fasttext_model import FastText
+from word_embedding.fasttext_data_loader import FastTextDataLoader
+from word_embedding.fasttext_model import FastText
 from .dimension_reduction import DimensionReduction
 from .clustering_metrics import ClusteringMetrics
 from .clustering_utils import ClusteringUtils

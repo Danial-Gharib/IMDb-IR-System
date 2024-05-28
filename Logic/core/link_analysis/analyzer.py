@@ -1,4 +1,4 @@
-from graph import LinkGraph
+from .graph import LinkGraph
 import json
 # from ..indexer.indexes_enum import Indexes
 # from ..indexer.index_reader import Index_reader

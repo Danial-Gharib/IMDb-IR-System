@@ -1,7 +1,50 @@
 import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
-from utility.preprocess import Preprocessor
+import json
+# import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import re
+import string
+
+
+def preprocess_text(text, minimum_length=1, stopword_removal=True, stopwords_domain=[], lower_case=True,
+                       punctuation_removal=True):
+    """
+    preprocess text by removing stopwords, punctuations, and converting to lowercase, and also filter based on a min length
+    for stopwords use nltk.corpus.stopwords.words('english')
+    for punctuations use string.punctuation
+
+    Parameters
+    ----------
+    text: str
+        text to be preprocessed
+    minimum_length: int
+        minimum length of the token
+    stopword_removal: bool
+        whether to remove stopwords
+    stopwords_domain: list
+        list of stopwords to be removed base on domain
+    lower_case: bool
+        whether to convert to lowercase
+    punctuation_removal: bool
+        whether to remove punctuations
+    """
+    if text is None:
+        return ""
+    if lower_case:
+        text = text.lower()
+    if punctuation_removal:
+        text = text.translate(str.maketrans('', '', string.punctuation))
+    tokens = word_tokenize(text)
+    if stopword_removal:
+        stop_words = set(stopwords.words('english') + stopwords_domain)
+        tokens = [word for word in tokens if word not in stop_words]
+    
+    tokens = [word for word in tokens if len(word) >= minimum_length]
+
+    return ' '.join(tokens)
 
 
 class FastTextDataLoader:
@@ -34,15 +77,41 @@ class FastTextDataLoader:
         ----------
             pd.DataFrame: A pandas DataFrame containing movie information (synopses, summaries, reviews, titles, genres).
         """
+        data = None
+        with open(self.file_path) as f:
+            data = json.load(f)
+        
+        titles = []
+        genres = []
+        summaries = []
+        reviews = []
+        synopsis = []
+        
+        for i, movie in enumerate (tqdm(data, desc='Creating Dataframe', mininterval=0.1, ncols=None)):
+            titles.append(preprocess_text(movie.get("title", "")))
+            genres.append(preprocess_text(" ".join(movie.get('genres', []) or [])))
+            summaries.append(preprocess_text(" ".join(movie.get('summaries', []) or [])))
+            synopsis.append(preprocess_text(" ".join(movie.get('synopsis', []) or [])))
+            # print(movie.get('reviews'))
+            movie_reviews = movie.get('reviews', [])
+            movie_review = []
+            if movie_reviews is not None:
+                for review in movie_reviews:
+                    movie_review.append(review[0])
+                    movie_review.append(review[1])
+            reviews.append(preprocess_text(" ".join(movie_review)))
+
+            if (i + 1) % 100 == 0:
+                print(f"{i+1} movies added up to now.")
+
         df = pd.DataFrame({
-            'synopsis': data['synopses'],
-            'summaries': data['summaries'],
-            'reviews': data['reviews'],
-            'title': data['titles'],
-            'genre': data['genres']
+            'synopsis': synopsis,
+            'summaries': summaries,
+            'reviews': reviews,
+            'title': titles,
+            'genre': genres
         })
         return df
-        pass
 
     def create_train_data(self):
         """
@@ -51,18 +120,27 @@ class FastTextDataLoader:
         Returns:
             tuple: A tuple containing two NumPy arrays: X (preprocessed text data) and y (encoded genre labels).
         """
-        df = self.read_data_to_df()
-        X = df['synopsis'] + ' ' + df['summaries'] + ' ' + df['reviews'] + ' ' + df['title']
-        y = df['genre']
+        df = pd.read_csv("fasttext_training/ft.csv")
+        df['synopsis'] = df['synopsis'].fillna('').astype(str)
+        df['summaries'] = df['summaries'].fillna('').astype(str)
+        df['reviews'] = df['reviews'].fillna('').astype(str)
+        df['title'] = df['title'].fillna('').astype(str)
+        df['training'] = df['synopsis'] + ' ' + df['summaries'] + ' ' + df['reviews'] + ' ' + df['title']
+        y = df['genre'].fillna('').astype(str)
         labelencoder = LabelEncoder()
         y = labelencoder.fit_transform(y)
-        return X.to_numpy(), y
-        pass
+        ### now we write it as .txt:
+        with open("fasttext_training/ft.txt", "w") as f:
+            for text in df['training']:
+                f.write(text + "\n")
+        return df['training'].to_numpy(), y
 
 
 if __name__ == '__main__':
+    # nltk.download('stopwords')
     print("HI")
-    # path = 'indexes_standard/'
-    # dataloader = FastTextDataLoader(path)
-    # df = dataloader.read_data_to_df()
-    # df.to_csv("fasttext/fasttext_training.csv")
+    path = 'IMDB_crawled_standard.json'
+    dataloader = FastTextDataLoader(path)
+    df = dataloader.read_data_to_df()
+    df.to_csv("fasttext_training/ft.csv")
+    print("training data made and save.")

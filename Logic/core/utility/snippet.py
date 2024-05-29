@@ -1,4 +1,4 @@
-from .preprocess import Preprocessor
+from preprocess import Preprocessor
 class Snippet:
     def __init__(self, number_of_words_on_each_side=5):
         """

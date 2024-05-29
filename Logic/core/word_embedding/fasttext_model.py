@@ -3,7 +3,7 @@ import re
 from tqdm import tqdm
 from scipy.spatial import distance
 
-from fasttext_data_loader import FastTextDataLoader
+from .fasttext_data_loader import FastTextDataLoader
 
 
 
@@ -124,7 +124,7 @@ class FastText:
         """
         self.model = fasttext.load_model(path=path)
 
-    def prepare(self, dataset, mode, save=False, path='fasttext_training/FastText_model.bin'):
+    def prepare(self, dataset, mode, save=False, path='fasttext_training/FastText_model.bin', epoch=5):
         """
         Prepares the FastText model.
 
@@ -136,7 +136,7 @@ class FastText:
             The mode to prepare the FastText model.
         """
         if mode == 'train':
-            self.train(dataset)
+            self.train(dataset, epoch=epoch)
         if mode == 'load':
             self.load_model(path)
         if save:

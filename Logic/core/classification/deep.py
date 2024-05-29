@@ -6,8 +6,8 @@ from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from .data_loader import ReviewLoader
-from .basic_classifier import BasicClassifier
+from data_loader import ReviewLoader
+from basic_classifier import BasicClassifier
 
 
 class ReviewDataSet(Dataset):
@@ -87,6 +87,25 @@ class DeepModelClassifier(BasicClassifier):
         -------
         self
         """
+        train_dataset = ReviewDataSet(x, y)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+
+        for epoch in range(self.num_epochs):
+            self.model.train()
+            total_loss = 0.0
+            for xb, yb in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{self.num_epochs}"):
+                xb, yb = xb.to(self.device), yb.to(self.device)
+                self.optimizer.zero_grad()
+                preds = self.model(xb)
+                loss = self.criterion(preds, yb)
+                loss.backward()
+                self.optimizer.step()
+                total_loss += loss.item()
+            print(f"Epoch {epoch + 1}/{self.num_epochs}, Loss: {total_loss/len(train_loader)}")
+
+            if self.test_loader is not None:
+                eval_loss, _, _, f1_score_macro = self._eval_epoch(self.test_loader, self.model)
+                print(f"Validation Loss: {eval_loss}, F1 Score: {f1_score_macro}")
         return self
 
     def predict(self, x):
@@ -101,7 +120,18 @@ class DeepModelClassifier(BasicClassifier):
         predicted_labels: list
             The predicted labels
         """
-        pass
+        self.model.eval()
+        test_dataset = ReviewDataSet(x, np.zeros(len(x)))
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+        predicted_labels = []
+
+        with torch.no_grad():
+            for xb, _ in tqdm(test_loader, desc="Predicting"):
+                xb = xb.to(self.device)
+                preds = self.model(xb)
+                predicted_labels.extend(torch.argmax(preds, dim=1).cpu().numpy())
+        
+        return predicted_labels
 
     def _eval_epoch(self, dataloader: torch.utils.data.DataLoader, model):
         """
@@ -120,7 +150,22 @@ class DeepModelClassifier(BasicClassifier):
         f1_score_macro: float
             The f1 score on the given dataloader
         """
-        pass
+        model.eval()
+        total_loss = 0
+        all_preds = []
+        all_labels = []
+
+        with torch.no_grad():
+            for xb, yb in tqdm(dataloader, desc="Evaluating"):
+                xb, yb = xb.to(self.device), yb.to(self.device)
+                preds = model(xb)
+                loss = self.criterion(preds, yb)
+                total_loss += loss.item()
+                all_preds.extend(torch.argmax(preds, dim=1).cpu().numpy())
+                all_labels.extend(yb.cpu().numpy())
+        eval_loss = total_loss / len(dataloader)
+        f1_score_macro = f1_score(all_labels, all_preds, average="macro")
+        return eval_loss, all_preds, all_labels, f1_score_macro
 
     def set_test_dataloader(self, X_test, y_test):
         """
@@ -136,7 +181,9 @@ class DeepModelClassifier(BasicClassifier):
         self
             Returns self
         """
-        pass
+        test_dataset = ReviewDataSet(X_test, y_test)
+        self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+        return self
 
     def prediction_report(self, x, y):
         """
@@ -152,11 +199,26 @@ class DeepModelClassifier(BasicClassifier):
         str
             The classification report
         """
-        pass
+        preds = self.predict(x)
+        report = classification_report(y, preds)
+        return report
 
 # F1 Accuracy : 79%
 if __name__ == '__main__':
     """
     Fit the model with the training data and predict the test data, then print the classification report
     """
-    pass
+    file_path = "classification_dataset/archive/IMDB Dataset.csv"
+    loader = ReviewLoader(file_path=file_path)
+    loader.load_data(train=False, model_path="classification_training/ft_model.bin", write_rs=False, save_model=False)
+    print("fasttext model loaded")
+    loader.get_embeddings(load=True, save=False)
+    print("embeddings generated")
+    x_train, x_test, y_train, y_test = loader.split_data()
+    print("Data has been loaded and split into training and testing sets.")
+    classifier = DeepModelClassifier(in_features=100, num_classes=2, batch_size=64, num_epochs=15)
+    classifier.set_test_dataloader(x_test, y_test)
+    classifier.fit(x_train, y_train)
+    print("Training completed")
+    report = classifier.prediction_report(x_test, y_test)
+    print("Classification Report\n", report)

@@ -1,8 +1,11 @@
 IMDB_crawled_standard.json
 
 tmp.py
+
 fastText/
 fasttext_training/
+classification_dataset/
+classification_training/
 # git ignore file for python projects
 # Byte-compiled / optimized / DLL files
 __pycache__/

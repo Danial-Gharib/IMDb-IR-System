@@ -119,8 +119,8 @@ class DimensionReduction:
 
         # Fit PCA and compute cumulative explained variance ratio
         # TODO
-        pca = PCA().fit(data)
-        explained_variance_ratio = np.cumsum(pca.explained_variance_ratio_)
+        self.pca.fit(data)
+        explained_variance_ratio = np.cumsum(self.pca.explained_variance_ratio_)
         # Create the plot
         # TODO
         plt.plot(range(1, len(explained_variance_ratio) + 1), explained_variance_ratio, marker='o')

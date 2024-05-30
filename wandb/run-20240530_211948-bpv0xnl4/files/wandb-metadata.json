@@ -1,0 +1,108 @@
+{
+    "os": "Linux-6.8.0-31-generic-x86_64-with-glibc2.39",
+    "python": "3.11.9",
+    "heartbeatAt": "2024-05-30T17:49:57.073094",
+    "startedAt": "2024-05-30T17:49:48.541757",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/danial/SUT/Term6/MIR/Project/Phase2/IMDb-IR-System/Logic/core/clustering/main.py",
+    "codePathLocal": "Logic/core/clustering/main.py",
+    "codePath": "Logic/core/clustering/main.py",
+    "git": {
+        "remote": "git@github.com:Danial-Gharib/IMDb-IR-System.git",
+        "commit": "d71d9fa766c2b65279dfe7059cf455246a16c653"
+    },
+    "email": "danial.mail.gh@gmail.com",
+    "root": "/home/danial/SUT/Term6/MIR/Project/Phase2/IMDb-IR-System",
+    "host": "danial-Lenovo-Legion-5-15IMH05H",
+    "username": "danial",
+    "executable": "/home/danial/SUT/Term6/MIR/Project/Phase2/IMDb-IR-System/venv/bin/python",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 3941.344416666667,
+        "min": 800.0,
+        "max": 5000.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 4298.669,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4409.683,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4199.938,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4264.735,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4243.897,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4302.024,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4199.963,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4258.416,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 800.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4392.553,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4374.918,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 4398.382,
+            "min": 800.0,
+            "max": 5000.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 63.55119323730469,
+            "used": 40.18672561645508
+        }
+    },
+    "gpu": "NVIDIA GeForce GTX 1660 Ti",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce GTX 1660 Ti",
+            "memory_total": 6442450944
+        }
+    ],
+    "memory": {
+        "total": 15.486824035644531
+    }
+}

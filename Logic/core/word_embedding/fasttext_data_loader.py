@@ -7,7 +7,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import re
 import string
-
+import numpy as np
+from sklearn.preprocessing import MultiLabelBinarizer
 
 def preprocess_text(text, minimum_length=1, stopword_removal=True, stopwords_domain=[], lower_case=True,
                        punctuation_removal=True):
@@ -113,7 +114,7 @@ class FastTextDataLoader:
         })
         return df
 
-    def create_train_data(self):
+    def create_train_data(self, save=True):
         """
         Reads data using the read_data_to_df function, pre-processes the text data, and creates training data (features and labels).
 
@@ -133,8 +134,32 @@ class FastTextDataLoader:
         with open("fasttext_training/ft.txt", "w") as f:
             for text in df['training']:
                 f.write(text + "\n")
-        return df['training'].to_numpy(), y
+        X = df['training'].to_numpy()
+        if save:
+            self.save_traindata(df)
+        return X, y
+    
+    def save_traindata(self, df, path="fasttext_training/clustering_training.csv"):
+        df.to_csv(path)
 
+    def load_traindata(self, path="fasttext_training/clustering_training.csv"):
+        df = pd.read_csv(path)
+        df['genre'] = df['genre'].fillna('').apply(lambda x: x.split())
+        df['first_genre'] = df['genre'].apply(lambda x: x[0] if len(x) > 0 else 'Unknown')
+        
+        # Initialize the LabelEncoder
+        labelencoder = LabelEncoder()
+        
+        # Fit and transform the first genres
+        y = labelencoder.fit_transform(df['first_genre'])
+        
+        # Print the number of unique labels
+        print(f"Number of unique first genres: {len(set(y))}")
+
+        # unique_genre_combinations = np.unique(y, axis=0)
+        # print(f"Number of unique genre combinations: {len(unique_genre_combinations)}")
+
+        return df['training'].to_numpy(), y
 
 if __name__ == '__main__':
     # nltk.download('stopwords')

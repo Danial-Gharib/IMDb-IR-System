@@ -2,8 +2,8 @@ import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.svm import SVC
 
-from basic_classifier import BasicClassifier
-from data_loader import ReviewLoader
+from .basic_classifier import BasicClassifier
+from .data_loader import ReviewLoader
 
 
 class SVMClassifier(BasicClassifier):

@@ -190,6 +190,9 @@ class SearchEngine:
 
         for field in weights:
             #TODO
+            if weights[field] == 0:
+                print("A")
+                continue
             index_reader = self.document_indexes[field]
             index = index_reader.index
             scorer = Scorer(index, self.metadata_index.index['document_count'])
@@ -272,8 +275,8 @@ class SearchEngine:
 if __name__ == "__main__":
     search_engine = SearchEngine()
     query = "spiderman in wonderland"
-    method = "unigram"
-    weights = {Indexes.STARS: 0.0, Indexes.GENRES: 0.0, Indexes.SUMMARIES: 1}
+    method = "lnc.ltc"
+    weights = {Indexes.STARS: 1.0, Indexes.GENRES: 1.0, Indexes.SUMMARIES: 1.0}
     result = search_engine.search(query, method, weights, smoothing_method='bayes')
 
     print(result)

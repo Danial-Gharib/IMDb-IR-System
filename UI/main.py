@@ -1,14 +1,17 @@
 import streamlit as st
 import sys
-
-sys.path.append("../")
+import os
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 from Logic import utils
 import time
 from enum import Enum
 import random
 from Logic.core.utility.snippet import Snippet
 from Logic.core.link_analysis.analyzer import LinkAnalyzer
-from Logic.core.indexer.index_reader import Index_reader, Indexes
+from Logic.core.indexer.index_reader import Index_reader
+from Logic.core.search import Indexes
 
 snippet_obj = Snippet()
 
@@ -24,7 +27,7 @@ class color(Enum):
 
 
 def get_top_x_movies_by_rank(x: int, results: list):
-    path = "../Logic/core/index/"  # Link to the index folder
+    path = "indexes_standard/"  # Link to the index folder
     document_index = Index_reader(path, Indexes.DOCUMENTS)
     corpus = []
     root_set = []
@@ -130,7 +133,8 @@ def search_handling(
         return
 
     if search_button:
-        corrected_query = utils.correct_text(search_term, utils.all_documents)
+        corrected_query = search_term
+        # utils.correct_text(search_term, utils.movies_dataset)
 
         if corrected_query != search_term:
             st.warning(f"Your search terms were corrected to: {corrected_query}")
@@ -140,11 +144,11 @@ def search_handling(
             time.sleep(0.5)  # for showing the spinner! (can be removed)
             start_time = time.time()
             result = utils.search(
-                search_term,
-                search_max_num,
-                search_method,
-                search_weights,
-                unigram_smoothing=unigram_smoothing,
+                query=search_term,
+                max_result_count=search_max_num,
+                method=search_method,
+                weights=search_weights,
+                unigram_smoothing_method=unigram_smoothing,
                 alpha=alpha,
                 lamda=lamda,
             )
@@ -172,9 +176,12 @@ def search_handling(
 
             with st.container():
                 st.markdown("**Directors:**")
-                num_authors = len(info["directors"])
-                for j in range(num_authors):
-                    st.text(info["directors"][j])
+                if info["directors"] is None:
+                    st.text("No directors")
+                else:
+                    num_authors = len(info["directors"])
+                    for j in range(num_authors):
+                        st.text(info["directors"][j])
 
             with st.container():
                 st.markdown("**Stars:**")

@@ -2,12 +2,16 @@ from typing import Dict, List
 from .core.search import SearchEngine
 from .core.utility.spell_correction import SpellCorrection
 from .core.utility.snippet import Snippet
-from .core.indexer.indexes_enum import Indexes, Index_types
+# from .core.indexer.indexes_enum import Indexes, Index_types
+from .core.search import Indexes
 import json
 
 movies_dataset = None  # TODO: load your movies dataset (from the json file you saved your indexes in), here
 # You can refer to `get_movie_by_id` to see how this is used.
-# search_engine = SearchEngine()
+with open("IMDB_crawled_standard.json") as f:
+    movies_dataset = json.load(f)
+
+search_engine = SearchEngine()
 
 
 def correct_text(text: str, all_documents: List[str]) -> str:
@@ -26,8 +30,8 @@ def correct_text(text: str, all_documents: List[str]) -> str:
         The corrected form of the given text
     """
     # TODO: You can add any preprocessing steps here, if needed!
-    # spell_correction_obj = SpellCorrection(all_documents)
-    # text = spell_correction_obj.spell_check(text)
+    spell_correction_obj = SpellCorrection(all_documents)
+    text = spell_correction_obj.spell_check(text)
     return text
 
 
@@ -38,6 +42,9 @@ def search(
     weights: list = [0.3, 0.3, 0.4],
     should_print=False,
     preferred_genre: str = None,
+    unigram_smoothing_method: str = "mixture",
+    alpha=0.5,
+    lamda=0.5,
 ):
     """
     Finds relevant documents to query
@@ -71,7 +78,13 @@ def search(
     # return search_engine.search(
     #     query, method, weights, max_results=max_result_count, safe_ranking=True
     # )
-    return None
+    search_weights = {Indexes.STARS: weights[0], Indexes.GENRES: weights[1], Indexes.SUMMARIES: weights[2]}
+    # print(search_weights)
+    # print(weights)
+    return search_engine.search(
+        query, method, search_weights, max_results=max_result_count, safe_ranking=True, smoothing_method=unigram_smoothing_method
+        , alpha=alpha, lamda=lamda
+    )
 
 
 def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, str]:
@@ -102,12 +115,16 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
     #         "Image_URL": "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
     #     },
     # )
+    result = {}
+    for movie in movies_dataset:
+        if movie["id"] == id:
+            result = movie
+            break
 
-    # result["Image_URL"] = (
-    #     "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"  # a default picture for selected movies
-    # )
-    # result["URL"] = (
-    #     f"https://www.imdb.com/title/{result['id']}"  # The url pattern of IMDb movies
-    # )
-    # return result
-    return None
+    result["Image_URL"] = (
+        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"  # a default picture for selected movies
+    )
+    result["URL"] = (
+        f"https://www.imdb.com/title/{result['id']}"  # The url pattern of IMDb movies
+    )
+    return result

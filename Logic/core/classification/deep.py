@@ -222,3 +222,15 @@ if __name__ == '__main__':
     print("Training completed")
     report = classifier.prediction_report(x_test, y_test)
     print("Classification Report\n", report)
+
+    ############# classificatoin report ########################
+    # Classification Report
+    #            precision    recall  f1-score   support
+
+    #        0       0.83      0.93      0.88      4961
+    #        1       0.92      0.82      0.87      5039
+
+    # accuracy                            0.87     10000
+    # macro avg       0.88      0.87      0.87     10000
+    # weighted avg    0.88      0.87      0.87     10000
+

@@ -1,13 +1,16 @@
 import numpy as np
 import os
+import sys
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
-
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 from word_embedding.fasttext_data_loader import FastTextDataLoader
 from word_embedding.fasttext_model import FastText
-from .dimension_reduction import DimensionReduction
-from .clustering_metrics import ClusteringMetrics
-from .clustering_utils import ClusteringUtils
+from clustering.dimension_reduction import DimensionReduction
+from clustering.clustering_metrics import ClusteringMetrics
+from clustering.clustering_utils import ClusteringUtils
 
 # Main Function: Clustering Tasks
 
@@ -42,3 +45,5 @@ from .clustering_utils import ClusteringUtils
 
 # 3. Evaluation
 # TODO: Using clustering metrics, evaluate how well your clustering method is performing.
+clustering_matrics = ClusteringMetrics()
+

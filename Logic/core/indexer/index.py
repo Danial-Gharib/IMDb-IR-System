@@ -2,13 +2,14 @@ import time
 import os
 import json
 import copy
-from indexes_enum import Indexes
-### importing preprocessor
-# import sys
-# current_dir = os.path.dirname(os.path.realpath(__file__))
-# parent_dir = os.path.dirname(current_dir)
-# sys.path.append(parent_dir)
-####
+
+## importing preprocessor
+import sys
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+###
+from indexer.indexes_enum import Indexes
 from utility import Preprocessor
 
 class Index:
@@ -366,12 +367,14 @@ def main():
     summareis = []
     stars = []
     genres = []
+    titles = []
     for movie in imdb_data:
         if movie['summaries'] is not None and movie['stars'] is not None and movie['genres'] is not None:
             ids.append(movie['id'])
             summareis.append(' '.join(movie['summaries']))
             stars.append(' '.join(movie['stars']))
             genres.append(' '.join(movie['genres']))
+            titles.append(movie['title'])
 
 
     print("Start preprocessing")
@@ -387,6 +390,7 @@ def main():
     for movie_idx in range(len(ids)):
         movie = {
             'id':ids[movie_idx],
+            'title': titles[movie_idx],
             'summaries':preprocessed_summaries[movie_idx],
             'stars':preprocessed_stars[movie_idx],
             'genres':preprocessed_genres[movie_idx]

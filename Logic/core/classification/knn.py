@@ -2,8 +2,8 @@ import numpy as np
 from sklearn.metrics import classification_report
 from tqdm import tqdm
 from scipy.stats import mode
-from basic_classifier import BasicClassifier
-from data_loader import ReviewLoader
+from .basic_classifier import BasicClassifier
+from .data_loader import ReviewLoader
 
 
 class KnnClassifier(BasicClassifier):

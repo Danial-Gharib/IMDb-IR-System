@@ -3,8 +3,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-from basic_classifier import BasicClassifier
-from data_loader import ReviewLoader
+from .basic_classifier import BasicClassifier
+from .data_loader import ReviewLoader
 
 
 class NaiveBayes(BasicClassifier):

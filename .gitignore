@@ -1,7 +1,17 @@
 IMDB_crawled_standard.json
 
 tmp.py
+Movie_Genre_Classifier/model.safetensors
+recommender_system/datasets/
 
+IMDB_crawled.json
+
+results/
+Logic/core/rag/IMDB_crawled.json
+Logic/core/rag/data/
+Logic/core/recommender_system/datasets/
+vevn/
+wandb/
 fastText/
 fasttext_training/
 classification_dataset/

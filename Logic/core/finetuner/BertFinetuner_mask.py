@@ -221,7 +221,7 @@ class BERTFinetuner:
         test_dataset = self.create_dataset(test_encodings, test_labels)
 
         #######
-        trainer = Trainer(model=self.model)
+        trainer = Trainer(model=self.model, compute_metrics=self.compute_metrics)
         metrics = trainer.evaluate(test_dataset)
         print(metrics)
 

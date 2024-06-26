@@ -8,7 +8,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import seaborn
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, precision_score, recall_score, f1_score
 
 
 
@@ -31,6 +31,8 @@ class BERTFinetuner:
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.model = BertForSequenceClassification.from_pretrained('bert-base-uncased',
                                         num_labels=top_n_genres, problem_type="multi_label_classification")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
         self.dataset = None
         self.top_genres = []
         self.label_binarizer = None
@@ -110,6 +112,7 @@ class BERTFinetuner:
             IMDbDataset: A PyTorch dataset object.
         """
         # TODO: Implement dataset creation logic
+
         return IMDbDataset(encodings=encodings, labels=labels)
 
     def fine_tune_bert(self, epochs=5, batch_size=16, warmup_steps=500, weight_decay=0.01):
@@ -129,10 +132,6 @@ class BERTFinetuner:
             train_texts.append(movie['first_page_summary'])
             intersect_genres = list(set(movie['genres']).intersection(set(self.top_genres)))
             train_labels.append(intersect_genres)
-            # print(train_labels[0])
-            # print(train_texts[0])
-            # break
-        
 
         val_texts = []
         val_labels = []
@@ -160,9 +159,11 @@ class BERTFinetuner:
             per_device_eval_batch_size=batch_size,
             warmup_steps=warmup_steps,
             weight_decay=weight_decay,
-            logging_dir="./logs",
-            logging_steps=10,
+            # logging_dir="./logs",
+            # logging_steps=10,
             eval_strategy="epoch",
+            save_strategy="epoch",
+            load_best_model_at_end=True,
             # report_to=[],
             run_name="finetuning_IMDBdataset_run"
         )        
@@ -188,23 +189,19 @@ class BERTFinetuner:
             dict: A dictionary containing the computed metrics.
         """
         # TODO: Implement metric computation logic
-        logits = pred.predictions
-        sigmoid = torch.nn.Sigmoid()
-        probs = sigmoid(torch.Tensor(logits))
-        preds = (probs > 0.5).float().cpu().numpy()
         labels = pred.label_ids
-
-        # preds = pred.predictions.argmax(-1)
-
-        accuracy = accuracy_score(labels, preds),
-        precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average="micro")
-
+        preds = pred.predictions
+        probabilities = torch.sigmoid(torch.tensor(preds))
+        predictions = (probabilities > 0.5).int().numpy()
+        # precision, recall, f1 = precision_recall_fscore_support()
+        precision = precision_score(labels, predictions, average='samples')
+        recall = recall_score(labels, predictions, average='samples')
+        f1 = f1_score(labels, predictions, average='samples')
         return {
-        "accuracy": accuracy,
-        "precision": precision.tolist() if isinstance(precision, np.ndarray) else precision,
-        "recall": recall.tolist() if isinstance(recall, np.ndarray) else recall,
-        "f1": f1.tolist() if isinstance(f1, np.ndarray) else f1,
-        }
+                "Precision": precision,
+                "Recall": recall,
+                "F1-Score": f1
+                }
 
     def evaluate_model(self):
         """
@@ -222,6 +219,8 @@ class BERTFinetuner:
         test_labels = self.label_binarizer.transform(test_labels)
         test_encodings = self.tokenizer(test_texts, truncation=True, padding=True, max_length=512)
         test_dataset = self.create_dataset(test_encodings, test_labels)
+
+        #######
         trainer = Trainer(model=self.model)
         metrics = trainer.evaluate(test_dataset)
         print(metrics)

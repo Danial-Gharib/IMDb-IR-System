@@ -5,7 +5,8 @@ Movie_Genre_Classifier/model.safetensors
 recommender_system/datasets/
 
 IMDB_crawled.json
-
+Movie_Genre_Classifier/
+wandb/
 results/
 Logic/core/rag/IMDB_crawled.json
 Logic/core/rag/data/

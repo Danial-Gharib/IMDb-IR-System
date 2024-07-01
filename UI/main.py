@@ -1,13 +1,15 @@
 import streamlit as st
 import sys
 import os
+import time
+from enum import Enum
+import random
+
+# Add your necessary imports here
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 from Logic import utils
-import time
-from enum import Enum
-import random
 from Logic.core.utility.snippet import Snippet
 from Logic.core.link_analysis.analyzer import LinkAnalyzer
 from Logic.core.indexer.index_reader import Index_reader
@@ -15,19 +17,20 @@ from Logic.core.search import Indexes
 
 snippet_obj = Snippet()
 
-
 class color(Enum):
-    RED = "#FF0000"
-    GREEN = "#00FF00"
-    BLUE = "#0000FF"
-    YELLOW = "#FFFF00"
-    WHITE = "#FFFFFF"
-    CYAN = "#00FFFF"
+    RED = "#FF6347"
+    GREEN = "#32CD32"
+    BLUE = "#1E90FF"
+    YELLOW = "#FFD700"
+    WHITE = "#F8F8FF"
+    CYAN = "#00CED1"
     MAGENTA = "#FF00FF"
-
+    PURPLE = "#8A2BE2"
+    ORANGE = "#FFA500"
+    PINK = "#FF69B4"
 
 def get_top_x_movies_by_rank(x: int, results: list):
-    path = "indexes_standard/"  # Link to the index folder
+    path = "indexes_standard/"
     document_index = Index_reader(path, Indexes.DOCUMENTS)
     corpus = []
     root_set = []
@@ -47,7 +50,6 @@ def get_top_x_movies_by_rank(x: int, results: list):
     actors, movies = analyzer.hits(max_result=x)
     return actors, movies
 
-
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
     snippet, not_exist_words = snippet_obj.find_snippet(summary, query)
@@ -63,10 +65,8 @@ def get_summary_with_snippet(movie_info, query):
                 )
     return summary
 
-
 def search_time(start, end):
-    st.success("Search took: {:.6f} milli-seconds".format((end - start) * 1e3))
-
+    st.success(f"Search took: {(end - start) * 1e3:.2f} milliseconds")
 
 def search_handling(
     search_button,
@@ -88,7 +88,7 @@ def search_handling(
             st.markdown(f"**Top {num_filter_results} Actors:**")
             actors_ = ", ".join(top_actors)
             st.markdown(
-                f"<span style='color:{random.choice(list(color)).value}'>{actors_}</span>",
+                f"<span style='color:{random.choice(list(color)).value};font-size:1.2em;'>{actors_}</span>",
                 unsafe_allow_html=True,
             )
             st.divider()
@@ -101,7 +101,7 @@ def search_handling(
                 st.title(info["title"])
                 st.markdown(f"[Link to movie]({info['URL']})")
                 st.markdown(
-                    f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
+                    f"<b><font size='4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
                     unsafe_allow_html=True,
                 )
 
@@ -123,7 +123,7 @@ def search_handling(
                     num_topics = len(info["genres"])
                     for j in range(num_topics):
                         st.markdown(
-                            f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
+                            f"<span style='color:{random.choice(list(color)).value};font-size:1.1em;'>{info['genres'][j]}</span>",
                             unsafe_allow_html=True,
                         )
             with card[1].container():
@@ -170,7 +170,7 @@ def search_handling(
                 st.markdown(f"[Link to movie]({info['URL']})")
                 st.write(f"Relevance Score: {result[i][1]}")
                 st.markdown(
-                    f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
+                    f"<b><font size='4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
                     unsafe_allow_html=True,
                 )
 
@@ -195,7 +195,7 @@ def search_handling(
                     num_topics = len(info["genres"])
                     for j in range(num_topics):
                         st.markdown(
-                            f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
+                            f"<span style='color:{random.choice(list(color)).value};font-size:1.1em;'>{info['genres'][j]}</span>",
                             unsafe_allow_html=True,
                         )
             with card[1].container():
@@ -210,19 +210,68 @@ def search_handling(
                 and len(st.session_state["search_results"]) > 0
             )
 
-
 def main():
-    st.title("Search Engine")
+    st.set_page_config(
+        page_title="Movie Search Engine",
+        page_icon=":clapper:",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+
+    # Custom CSS for enhanced UI
+    st.markdown("""
+        <style>
+            @media (max-width: 600px) {
+                .stButton button {
+                    width: 100%;
+                }
+                .stTextInput input {
+                    width: 100%;
+                }
+                .stMarkdown span {
+                    font-size: 1em;
+                }
+            }
+            body {
+                background-image: url();
+                background-size: cover;
+                font-family: 'Arial', sans-serif;
+            }
+            .stButton button {
+                background-color: #FFA07A;
+                color: white;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .stTextInput input {
+                border: 2px solid #FFA07A;
+                border-radius: 5px;
+            }
+            .stSlider .stSliderThumb {
+                background-color: #FFA07A;
+            }
+            .stSlider .stSliderTrack {
+                background-color: #FFA07A;
+            }
+            .stMarkdown span {
+                font-size: 1.1em;
+                font-weight: bold;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.title("🎬 Movie Search Engine")
     st.write(
-        "This is a simple search engine for IMDB movies. You can search through IMDB dataset and find the most relevant movie to your search terms."
+        "Welcome to the Movie Search Engine! Search through the IMDB dataset to find the most relevant movies based on your search terms."
     )
     st.markdown(
-        '<span style="color:yellow">Developed By: MIR Team at Sharif University</span>',
+        '<span style="color:#FFA07A;font-size:1.2em;">Developed By: MIR Team at Sharif University</span>',
         unsafe_allow_html=True,
     )
 
-    search_term = st.text_input("Seacrh Term")
-    with st.expander("Advanced Search"):
+    search_term = st.text_input("🔍 Search Term")
+    with st.expander("🔧 Advanced Search"):
         search_max_num = st.number_input(
             "Maximum number of results", min_value=5, max_value=100, value=10, step=5
         )
@@ -290,8 +339,8 @@ def main():
     if "search_results" not in st.session_state:
         st.session_state["search_results"] = []
 
-    search_button = st.button("Search!")
-    filter_button = st.button("Filter movies by ranking")
+    search_button = st.button("🔍 Search!")
+    filter_button = st.button("🎬 Filter movies by ranking")
 
     search_handling(
         search_button,
@@ -305,7 +354,6 @@ def main():
         filter_button,
         slider_,
     )
-
 
 if __name__ == "__main__":
     main()
